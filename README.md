@@ -40,3 +40,19 @@ StartupConfig --> Main
 StartupConfig --> [*]: Power off
 Main --> [*]: Power off
 ```
+
+## Schematic
+```mermaid
+flowchart LR
+Pin2 ---|+| Piezo((Piezo)) ---|-| GND
+Pin12-5 ---|+| LED((LED)) ---|-| R1{{330Ω}} --- GND
+Pin4 --- b1(( )) --- Button((Button)) --- GND
+b1 --- R2{{10kΩ}} --- 5V
+```
+### Legend
+| Shape | Description |
+| - | - |
+| Rectangle | Arduino Pin |
+| Line | Wire |
+| Circle | IO element |
+| Hexagon | Resistor |
