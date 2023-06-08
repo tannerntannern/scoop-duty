@@ -46,9 +46,9 @@ Main --> [*]: Power off
 flowchart LR
 Pin2 ---|+| Piezo((Piezo)) ---|-| GND
 Pin12-5 ---|+| LED((LED)) ---|-| R1{{330Ω}} --- GND
-Pin4 --- b1(( )) --- Button((Button)) --- GND
-b1 --- R2{{10kΩ}} --- 5V
+Pin4 --- Button((Button)) --- GND
 ```
+
 ### Legend
 | Shape | Description |
 | - | - |
