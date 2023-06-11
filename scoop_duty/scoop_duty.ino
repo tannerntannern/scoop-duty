@@ -1,6 +1,10 @@
-int leftLights[] = {8, 7, 6, 5};
-int rightLights[] = {12, 11, 10, 9};
-int BUTTON_PIN = 4;
+#define MODE_HOUR 1
+#define MODE_MINUTE 2
+#define MODE_MAIN 3
+
+int leftLights[] = {8, 9, 10, 11};
+int rightLights[] = {3, 4, 5, 6};
+int BUTTON_PIN = 12;
 int BEEPER_PIN = 2;
 
 void multiPinMode(int pins[], int pinCount, int mode) {
@@ -13,22 +17,114 @@ void multiWrite(int pins[], int pinCount, int data) {
     digitalWrite(pins[i], data);
 }
 
+void lowBeep() {
+  tone(BEEPER_PIN, 800, 250);
+}
+
+void jingle() {
+  tone(BEEPER_PIN, 800, 90);
+  delay(90);
+  tone(BEEPER_PIN, 1200, 90);
+  delay(90);
+  tone(BEEPER_PIN, 1800, 90);
+  delay(90);
+  tone(BEEPER_PIN, 2700, 90);
+}
+
 void setup() {
   pinMode(BEEPER_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   multiPinMode(leftLights, 4, OUTPUT);
   multiPinMode(rightLights, 4, OUTPUT);
+  jingle();
 }
 
+bool leftOn = false;
+bool rightOn = false;
+void updateLights() {
+  multiWrite(leftLights, 4, leftOn ? HIGH : LOW);
+  multiWrite(rightLights, 4, rightOn ? HIGH : LOW);
+}
+
+#define RELEASE_NONE 0
+#define RELEASE_SHORT 1
+#define RELEASE_LONG 2
+
+int mode = MODE_HOUR;
+bool buttonPressed = false;
+int buttonPressDuration = 0;
+int buttonReleaseType = RELEASE_NONE;
+int delayInterval = 50;
 void loop() {
-  noTone(BEEPER_PIN);
-  if (digitalRead(BUTTON_PIN) == HIGH) {
-    multiWrite(leftLights, 4, HIGH);
-    multiWrite(rightLights, 4, LOW);
+  if (mode == MODE_HOUR)
+    hourSetup();
+  else if (mode == MODE_MINUTE)
+    minuteSetup();
+  else
+    mainMode();
+
+  bool nextButtonPressed = (digitalRead(BUTTON_PIN) == LOW);
+  bool buttonChanged = buttonPressed != nextButtonPressed;
+  buttonPressed = nextButtonPressed;
+
+  if (buttonPressed) {
+    buttonPressDuration ++;
+    buttonReleaseType = RELEASE_NONE;
+    if (buttonChanged) {
+      // on push
+    }
   } else {
-    tone(BEEPER_PIN, 880);
-    multiWrite(leftLights, 4, LOW);
-    multiWrite(rightLights, 4, HIGH);
+    if (buttonChanged) {
+      // on release
+      if (buttonPressDuration < (1 * 15)) {
+        buttonReleaseType = RELEASE_SHORT;
+      } else {
+        buttonReleaseType = RELEASE_LONG;
+      }
+    } else {
+      buttonReleaseType = RELEASE_NONE;
+    }
+    buttonPressDuration = 0;
   }
-  delay(100);
+  updateLights();
+  delay(delayInterval);
+}
+
+int hour = 0;
+void hourSetup() {
+  leftOn = true;
+  rightOn = false;
+
+  if (buttonReleaseType == RELEASE_LONG) {
+    jingle();
+    mode = MODE_MINUTE;  
+  } else if (buttonReleaseType == RELEASE_SHORT) {
+    lowBeep();
+    hour ++;
+  }
+}
+
+int minute = 0;
+void minuteSetup() {
+  leftOn = false;
+  rightOn = true;
+
+  if (buttonReleaseType == RELEASE_LONG) {
+    jingle();
+    mode = MODE_MAIN;  
+  } else if (buttonReleaseType == RELEASE_SHORT) {
+    lowBeep();
+    minute ++;
+  }
+}
+
+bool leftTurn = true;
+void mainMode() {
+  leftOn = leftTurn;
+  rightOn = !leftTurn;
+
+  if (buttonReleaseType == RELEASE_SHORT) {
+    lowBeep();
+    leftTurn = !leftTurn;
+  }
 }

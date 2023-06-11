@@ -45,8 +45,8 @@ Main --> [*]: Power off
 ```mermaid
 flowchart LR
 Pin2 ---|+| Piezo((Piezo)) ---|-| GND
-Pin12-5 ---|+| LED((LED)) ---|-| R1{{330Ω}} --- GND
-Pin4 --- Button((Button)) --- GND
+Pin3-6,8-11 ---|+| LED((LED)) ---|-| R1{{330Ω}} --- GND
+Pin12 --- Button((Button)) --- GND
 ```
 
 ### Legend
