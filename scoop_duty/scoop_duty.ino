@@ -105,21 +105,33 @@ void hourSetup() {
 }
 
 int minute = 0;
+int millisOffset = 0;
 void minuteSetup() {
   leftOn = false;
   rightOn = true;
 
   if (buttonReleaseType == RELEASE_LONG) {
     jingle();
-    mode = MODE_MAIN;  
+    millisOffset = (hour * 60 + minute) * 60 * 1000;
+    mode = MODE_MAIN;
   } else if (buttonReleaseType == RELEASE_SHORT) {
     lowBeep();
     minute ++;
   }
 }
 
+// FIXME: why is the time so inaccurate??
+
+#define MILLIS_24H 86400000
+unsigned long currentMillis = 0;
 bool leftTurn = true;
 void mainMode() {
+  unsigned long nextMillis = (millis() + millisOffset);
+  if ((unsigned long)(nextMillis - currentMillis) >= (unsigned long)MILLIS_24H) {
+    leftTurn = !leftTurn;
+    currentMillis = nextMillis;
+  }
+ 
   leftOn = leftTurn;
   rightOn = !leftTurn;
 
