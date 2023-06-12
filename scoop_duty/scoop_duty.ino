@@ -49,34 +49,23 @@ void updateLights() {
 #define RELEASE_NONE 0
 #define RELEASE_SHORT 1
 #define RELEASE_LONG 2
+#define DELAY_INTERVAL 50
 
 int mode = MODE_HOUR;
 bool buttonPressed = false;
 int buttonPressDuration = 0;
 int buttonReleaseType = RELEASE_NONE;
-int delayInterval = 50;
 void loop() {
-  if (mode == MODE_HOUR)
-    hourSetup();
-  else if (mode == MODE_MINUTE)
-    minuteSetup();
-  else
-    mainMode();
-
   bool nextButtonPressed = (digitalRead(BUTTON_PIN) == LOW);
   bool buttonChanged = buttonPressed != nextButtonPressed;
   buttonPressed = nextButtonPressed;
 
   if (buttonPressed) {
-    buttonPressDuration ++;
+    buttonPressDuration += DELAY_INTERVAL;
     buttonReleaseType = RELEASE_NONE;
-    if (buttonChanged) {
-      // on push
-    }
   } else {
     if (buttonChanged) {
-      // on release
-      if (buttonPressDuration < (1 * 15)) {
+      if (buttonPressDuration < 500) {
         buttonReleaseType = RELEASE_SHORT;
       } else {
         buttonReleaseType = RELEASE_LONG;
@@ -86,8 +75,17 @@ void loop() {
     }
     buttonPressDuration = 0;
   }
+
+  if (mode == MODE_HOUR) {
+    hourSetup();
+  } else if (mode == MODE_MINUTE) {
+    minuteSetup();
+  } else {
+    mainMode();
+  }
+
   updateLights();
-  delay(delayInterval);
+  delay(DELAY_INTERVAL);
 }
 
 int hour = 0;
@@ -100,36 +98,34 @@ void hourSetup() {
     mode = MODE_MINUTE;  
   } else if (buttonReleaseType == RELEASE_SHORT) {
     lowBeep();
-    hour ++;
+    hour = (hour + 1) % 24;
   }
 }
 
 int minute = 0;
-int millisOffset = 0;
+unsigned long millisOffset = 0;
 void minuteSetup() {
   leftOn = false;
   rightOn = true;
 
   if (buttonReleaseType == RELEASE_LONG) {
     jingle();
-    millisOffset = (hour * 60 + minute) * 60 * 1000;
+    millisOffset = ((unsigned long)hour * (unsigned long)60 + (unsigned long)minute) * (unsigned long)60 * (unsigned long)1000;
     mode = MODE_MAIN;
   } else if (buttonReleaseType == RELEASE_SHORT) {
     lowBeep();
-    minute ++;
+    minute = (minute + 1) % 60;
   }
 }
 
-// FIXME: why is the time so inaccurate??
-
-#define MILLIS_24H 86400000
-unsigned long currentMillis = 0;
+const unsigned long switchInterval = 86400000;  // 24h in millis
+unsigned long previousMillis = 0;
 bool leftTurn = true;
 void mainMode() {
-  unsigned long nextMillis = (millis() + millisOffset);
-  if ((unsigned long)(nextMillis - currentMillis) >= (unsigned long)MILLIS_24H) {
+  unsigned long currentMillis = millis() + millisOffset;
+  if (((unsigned long)(currentMillis - previousMillis)) >= switchInterval) {
     leftTurn = !leftTurn;
-    currentMillis = nextMillis;
+    previousMillis = currentMillis;
   }
  
   leftOn = leftTurn;
