@@ -1,3 +1,10 @@
+/*
+  Scoop Duty
+  by Tanner Nielsen
+
+  Please feel free to use this code in any way you'd like!
+*/
+
 #define MODE_HOUR 1
 #define MODE_MINUTE 2
 #define MODE_MAIN 3
